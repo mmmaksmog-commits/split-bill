@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Делим счёт — кто кому сколько должен</title>
+  <meta name="description" content="Общие траты в поездке или в кафе: кто платил, кто участвовал, и минимум переводов, чтобы все были в расчёте.">
+  <meta name="theme-color" content="#f2f5f3">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧾</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg: #f2f5f3; --card: #fff; --ink: #14201b; --muted: #6a7a72; --line: #e2e9e5; --acc: #16a36a; --acc2: #e8f7f0; --red: #e05252; color-scheme: light; }
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 Manrope, system-ui, sans-serif; }
+    button, input, select { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    .app { max-width: 960px; margin: 0 auto; padding: calc(20px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom)); }
+    .title { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .title span { font-size: 30px; }
+    .title input { flex: 1; min-width: 0; border: 0; background: transparent; font: 800 clamp(22px, 6vw, 30px) Manrope, sans-serif; outline: none; padding: 4px 0; border-bottom: 2px dashed transparent; }
+    .title input:focus { border-color: var(--line); }
+    .grid { display: grid; gap: 14px; }
+    @media (min-width: 880px) { .grid { grid-template-columns: 1fr 1fr; align-items: start; } }
+    .card { padding: 18px; border-radius: 22px; background: var(--card); border: 1px solid var(--line); min-width: 0; }
+    .card h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 16px; }
+    .card h2 small { margin-left: auto; color: var(--muted); font-weight: 600; }
+    .people { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 6px 5px 5px; border-radius: 999px; background: var(--bg); font-weight: 700; font-size: 14px; }
+    .ava { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--c); color: #fff; font-size: 12px; font-weight: 800; flex: none; }
+    .chip button { border: 0; background: none; color: var(--muted); padding: 0 4px; }
+    .addp { display: flex; gap: 6px; margin-top: 10px; }
+    input[type=text], input[type=number], select { width: 100%; padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 12px; background: #fbfdfc; font-size: 16px; outline: none; }
+    input:focus, select:focus { border-color: var(--acc); }
+    .btn { padding: 11px 16px; border: 0; border-radius: 12px; background: var(--ink); color: #fff; font-weight: 800; white-space: nowrap; }
+    .btn--acc { background: var(--acc); }
+    .btn--ghost { background: transparent; border: 1.5px solid var(--line); color: var(--ink); }
+    .exp { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+    .exp:first-child { border-top: 0; }
+    .exp .ico { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--acc2); font-size: 20px; }
+    .exp b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .exp small { color: var(--muted); font-size: 13px; }
+    .exp .sum { text-align: right; font: 800 15px 'JetBrains Mono', monospace; white-space: nowrap; }
+    .exp .sum button { display: block; margin-left: auto; border: 0; background: none; color: var(--muted); font: 600 12px Manrope, sans-serif; padding: 2px 0; }
+    form { display: grid; gap: 10px; }
+    .two { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 8px; }
+    .seg { display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--bg); }
+    .seg button { flex: 1; padding: 8px; border: 0; border-radius: 9px; background: transparent; font-weight: 700; font-size: 13px; color: var(--muted); }
+    .seg button.on { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
+    .who { display: grid; gap: 6px; }
+    .who label { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 12px; background: var(--bg); font-weight: 600; cursor: pointer; }
+    .who input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--acc); }
+    .who input[type=number] { width: 110px; padding: 6px 8px; }
+    .who .part { color: var(--muted); font-size: 13px; }
+    .lbl { font-size: 13px; font-weight: 700; color: var(--muted); }
+    .warn { color: var(--red); font-size: 13px; font-weight: 600; }
+    .bal { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 0; }
+    .bal .track { position: relative; height: 10px; border-radius: 5px; background: var(--bg); overflow: hidden; }
+    .bal .track i { position: absolute; top: 0; bottom: 0; border-radius: 5px; }
+    .bal b { font: 800 14px 'JetBrains Mono', monospace; white-space: nowrap; }
+    .pos { color: var(--acc); } .neg { color: var(--red); }
+    .transfers { display: grid; gap: 8px; }
+    .tr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 14px; border-radius: 16px; background: var(--acc2); font-weight: 700; }
+    .tr .arrow { color: var(--acc); }
+    .tr .amt { margin-left: auto; font: 800 17px 'JetBrains Mono', monospace; }
+    .done { padding: 18px; text-align: center; border-radius: 16px; background: var(--acc2); font-weight: 700; }
+    .share { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .share .btn { flex: 1; }
+    .empty { padding: 16px 0; color: var(--muted); text-align: center; }
+    .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); padding: 12px 18px; border-radius: 14px; background: var(--ink); color: #fff; font-weight: 700; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+    .toast.show { opacity: 1; }
+    .back { display: inline-block; margin-top: 18px; color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="title"><span>🧾</span><input id="name" aria-label="Название" placeholder="Название, например «Поездка в Казань»"><button class="btn btn--ghost" id="reset" title="Новый расчёт">＋ Новый</button></div>
+  <div class="grid">
+    <div class="grid" style="grid-template-columns:minmax(0,1fr)">
+      <section class="card">
+        <h2>👥 Участники</h2>
+        <div class="people" id="people"></div>
+        <form class="addp" id="addPerson"><input type="text" id="personName" placeholder="Имя" maxlength="20"><button class="btn">Добавить</button></form>
+      </section>
+      <section class="card">
+        <h2>➕ Новая трата</h2>
+        <form id="expForm">
+          <div class="two"><input type="text" id="eTitle" placeholder="На что: такси, ужин…" maxlength="40"><input type="number" id="eSum" placeholder="Сумма, ₽" min="1" step="0.01" inputmode="decimal"></div>
+          <div class="lbl">Кто платил</div>
+          <select id="ePayer"></select>
+          <div class="seg" id="mode"><button type="button" class="on" data-m="equal">Поровну</button><button type="button" data-m="exact">Точные суммы</button></div>
+          <div class="who" id="who"></div>
+          <div class="warn" id="eWarn"></div>
+          <button class="btn btn--acc">Добавить трату</button>
+        </form>
+      </section>
+    </div>
+    <div class="grid" style="grid-template-columns:minmax(0,1fr)">
+      <section class="card"><h2>💸 Кто кому переводит <small id="total"></small></h2><div id="transfers"></div>
+        <div class="share"><button class="btn" id="copy">Скопировать итог</button><button class="btn btn--ghost" id="link">Ссылка на расчёт</button></div></section>
+      <section class="card"><h2>⚖️ Баланс</h2><div id="balances"></div></section>
+      <section class="card"><h2>🧾 Траты <small id="count"></small></h2><div id="expenses"></div></section>
+    </div>
+  </div>
+  <a class="back" href="/">← Портфолио</a>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const KEY = 'split-v1';
+  const COLORS = ['#16a36a', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444', '#14b8a6', '#64748b', '#84cc16', '#f97316'];
+  const ICONS = [['такси', '🚕'], ['бензин', '⛽'], ['ужин', '🍝'], ['обед', '🍲'], ['завтрак', '🥐'], ['кафе', '☕'], ['продукт', '🛒'], ['отель', '🏨'], ['квартир', '🏠'], ['билет', '🎟️'], ['поезд', '🚆'], ['самолёт', '✈️'], ['бар', '🍻'], ['пицц', '🍕'], ['подар', '🎁'], ['кино', '🎬'], ['музей', '🏛️']];
+  const icon = (t) => (ICONS.find(([k]) => t.toLowerCase().includes(k)) || [0, '💳'])[1];
+  const money = (v) => `${(Math.round(v * 100) / 100).toLocaleString('ru-RU', { maximumFractionDigits: 2 })} ₽`;
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const initials = (n) => n.trim().slice(0, 1).toUpperCase();
+
+  let S = { name: '', people: [], expenses: [] };
+  // расчёт можно открыть по ссылке: данные лежат в адресе после #
+  const fromHash = () => { try { if (location.hash.startsWith('#d=')) return JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(3).replace(/-/g, '+').replace(/_/g, '/'))))); } catch {} return null; };
+  const shared = fromHash();
+  if (shared) { S = shared; history.replaceState(null, '', location.pathname); }
+  else { try { S = { ...S, ...JSON.parse(localStorage.getItem(KEY)) }; } catch {} }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
+  let mode = 'equal';
+
+  const person = (id) => S.people.find((p) => p.id === id);
+  const avaHtml = (p) => `<span class="ava" style="--c:${p.color}">${esc(initials(p.name))}</span>`;
+
+  // доля каждого в трате
+  function shares(e) {
+    if (e.mode === 'exact') return e.parts;
+    const ids = Object.keys(e.parts), each = e.sum / ids.length;
+    return Object.fromEntries(ids.map((id) => [id, each]));
+  }
+  function balances() {
+    const b = Object.fromEntries(S.people.map((p) => [p.id, 0]));
+    for (const e of S.expenses) {
+      if (b[e.payer] !== undefined) b[e.payer] += e.sum;
+      for (const [id, v] of Object.entries(shares(e))) if (b[id] !== undefined) b[id] -= v;
+    }
+    return b;
+  }
+  // минимум переводов: самый большой должник платит самому большому кредитору
+  function settle(b) {
+    const debt = Object.entries(b).filter(([, v]) => v < -0.009).map(([id, v]) => [id, -v]).sort((a, c) => c[1] - a[1]);
+    const cred = Object.entries(b).filter(([, v]) => v > 0.009).sort((a, c) => c[1] - a[1]);
+    const out = [];
+    while (debt.length && cred.length) {
+      const d = debt[0], c = cred[0], amt = Math.min(d[1], c[1]);
+      out.push({ from: d[0], to: c[0], amt });
+      d[1] -= amt; c[1] -= amt;
+      if (d[1] < 0.01) debt.shift(); if (c[1] < 0.01) cred.shift();
+      debt.sort((a, x) => x[1] - a[1]); cred.sort((a, x) => x[1] - a[1]);
+    }
+    return out;
+  }
+
+  function render() {
+    save();
+    $('name').value = S.name;
+    $('people').innerHTML = S.people.length ? S.people.map((p) => `<span class="chip">${avaHtml(p)}${esc(p.name)}<button data-rm="${p.id}" aria-label="Убрать">✕</button></span>`).join('') : '<span class="empty" style="padding:0">Добавьте всех, кто участвует в тратах.</span>';
+    $('people').querySelectorAll('[data-rm]').forEach((b) => b.onclick = () => {
+      const used = S.expenses.some((e) => e.payer === b.dataset.rm || b.dataset.rm in e.parts);
+      if (used && !confirm('У этого участника есть траты. Удалить вместе с ними?')) return;
+      S.people = S.people.filter((p) => p.id !== b.dataset.rm);
+      S.expenses = S.expenses.filter((e) => e.payer !== b.dataset.rm).map((e) => { const parts = { ...e.parts }; delete parts[b.dataset.rm]; return { ...e, parts }; }).filter((e) => Object.keys(e.parts).length);
+      render();
+    });
+    const prevPayer = $('ePayer').value;
+    $('ePayer').innerHTML = S.people.map((p) => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
+    if (person(prevPayer)) $('ePayer').value = prevPayer;
+    renderWho();
+
+    const b = balances(), total = S.expenses.reduce((s, e) => s + e.sum, 0);
+    $('total').textContent = total ? `всего ${money(total)}` : '';
+    $('count').textContent = S.expenses.length || '';
+    const tr = settle(b);
+    $('transfers').innerHTML = !S.expenses.length ? '<div class="empty">Добавьте траты — здесь появится, кто кому сколько переводит.</div>'
+      : tr.length ? `<div class="transfers">${tr.map((t) => `<div class="tr">${avaHtml(person(t.from))}${esc(person(t.from).name)} <span class="arrow">→</span> ${avaHtml(person(t.to))}${esc(person(t.to).name)}<span class="amt">${money(t.amt)}</span></div>`).join('')}</div>
+        <p class="empty" style="padding:8px 0 0;text-align:left">Всего ${tr.length} перевод${tr.length === 1 ? '' : tr.length < 5 ? 'а' : 'ов'} вместо ${S.expenses.length * Math.max(1, S.people.length - 1)} возможных.</p>`
+      : '<div class="done">🎉 Все в расчёте!</div>';
+    const max = Math.max(1, ...Object.values(b).map(Math.abs));
+    $('balances').innerHTML = S.people.length ? S.people.map((p) => {
+      const v = b[p.id], w = Math.abs(v) / max * 50;
+      return `<div class="bal">${avaHtml(p)}<div class="track"><i style="${v >= 0 ? `left:50%;width:${w}%;background:var(--acc)` : `right:50%;width:${w}%;background:var(--red)`}"></i></div><b class="${v > 0.009 ? 'pos' : v < -0.009 ? 'neg' : ''}">${v > 0.009 ? '+' : ''}${money(v)}</b></div>`;
+    }).join('') : '<div class="empty">Нет участников</div>';
+    $('expenses').innerHTML = S.expenses.length ? [...S.expenses].reverse().map((e) => {
+      const ids = Object.keys(e.parts);
+      return `<div class="exp"><span class="ico">${icon(e.title)}</span><span><b>${esc(e.title)}</b><small>платил(а) ${esc(person(e.payer)?.name || '?')} · ${e.mode === 'exact' ? 'по суммам' : ids.length === S.people.length ? 'на всех' : ids.map((id) => esc(person(id)?.name)).join(', ')}</small></span><span class="sum">${money(e.sum)}<button data-del="${e.id}">удалить</button></span></div>`;
+    }).join('') : '<div class="empty">Трат пока нет</div>';
+    $('expenses').querySelectorAll('[data-del]').forEach((x) => x.onclick = () => { S.expenses = S.expenses.filter((e) => e.id !== x.dataset.del); render(); });
+  }
+
+  function renderWho() {
+    const sum = +$('eSum').value || 0;
+    if (!S.people.length) { $('who').innerHTML = '<div class="empty">Сначала добавьте участников</div>'; return; }
+    const prev = {};
+    $('who').querySelectorAll('[data-id]').forEach((el) => (prev[el.dataset.id] = { on: el.querySelector('[type=checkbox]')?.checked, v: el.querySelector('[type=number]')?.value }));
+    if (mode === 'equal') {
+      const checked = S.people.filter((p) => prev[p.id]?.on ?? true);
+      $('who').innerHTML = S.people.map((p) => { const on = prev[p.id]?.on ?? true; return `<label data-id="${p.id}"><input type="checkbox" ${on ? 'checked' : ''}><span>${esc(p.name)}</span><span class="part">${on && sum ? money(sum / checked.length) : ''}</span></label>`; }).join('');
+      $('who').querySelectorAll('[type=checkbox]').forEach((c) => (c.onchange = renderWho));
+    } else {
+      $('who').innerHTML = S.people.map((p) => `<label data-id="${p.id}"><span>${avaHtml(p)}</span><span>${esc(p.name)}</span><input type="number" min="0" step="0.01" inputmode="decimal" placeholder="0" value="${prev[p.id]?.v ?? ''}"></label>`).join('');
+      $('who').querySelectorAll('[type=number]').forEach((c) => (c.oninput = checkExact));
+    }
+    checkExact();
+  }
+  function checkExact() {
+    if (mode !== 'exact') { $('eWarn').textContent = ''; return; }
+    const sum = +$('eSum').value || 0;
+    const parts = [...$('who').querySelectorAll('[type=number]')].reduce((s, i) => s + (+i.value || 0), 0);
+    const diff = Math.round((sum - parts) * 100) / 100;
+    $('eWarn').textContent = sum && diff ? (diff > 0 ? `Не распределено ${money(diff)}` : `Распределено на ${money(-diff)} больше суммы`) : '';
+  }
+
+  $('reset').onclick = () => { if (confirm('Начать новый расчёт? Текущий будет удалён.')) { S = { name: '', people: [], expenses: [] }; render(); $('personName').focus(); } };
+  $('name').oninput = () => { S.name = $('name').value; save(); };
+  $('addPerson').onsubmit = (e) => {
+    e.preventDefault();
+    const n = $('personName').value.trim(); if (!n) return;
+    S.people.push({ id: Math.random().toString(36).slice(2, 8), name: n, color: COLORS[S.people.length % COLORS.length] });
+    $('personName').value = ''; render(); $('personName').focus();
+  };
+  $('mode').querySelectorAll('[data-m]').forEach((b) => b.onclick = () => { mode = b.dataset.m; $('mode').querySelectorAll('[data-m]').forEach((x) => x.classList.toggle('on', x === b)); renderWho(); });
+  $('eSum').oninput = renderWho;
+  $('expForm').onsubmit = (e) => {
+    e.preventDefault();
+    const sum = Math.round((+$('eSum').value || 0) * 100) / 100;
+    const title = $('eTitle').value.trim() || 'Трата';
+    if (!S.people.length) return toast('Сначала добавьте участников');
+    if (sum <= 0) { $('eSum').focus(); return toast('Укажите сумму'); }
+    const parts = {};
+    $('who').querySelectorAll('[data-id]').forEach((el) => {
+      if (mode === 'equal') { if (el.querySelector('[type=checkbox]').checked) parts[el.dataset.id] = 1; }
+      else { const v = +el.querySelector('[type=number]').value || 0; if (v > 0) parts[el.dataset.id] = v; }
+    });
+    if (!Object.keys(parts).length) return toast('Выберите, на кого делить');
+    if (mode === 'exact' && Math.abs(Object.values(parts).reduce((a, b) => a + b, 0) - sum) > 0.01) return toast('Суммы участников не сходятся с общей');
+    S.expenses.push({ id: Math.random().toString(36).slice(2, 9), title, sum, payer: $('ePayer').value, mode, parts });
+    $('eTitle').value = ''; $('eSum').value = '';
+    $('who').querySelectorAll('[type=number]').forEach((i) => (i.value = ''));
+    render(); toast(`${icon(title)} Добавлено: ${money(sum)}`);
+  };
+
+  function summary() {
+    const tr = settle(balances());
+    const lines = [`🧾 ${S.name || 'Общие траты'}`, `Всего потрачено: ${money(S.expenses.reduce((s, e) => s + e.sum, 0))}`, ''];
+    if (!tr.length) lines.push('Все в расчёте 🎉');
+    else { lines.push('Кто кому переводит:'); tr.forEach((t) => lines.push(`• ${person(t.from).name} → ${person(t.to).name}: ${money(t.amt)}`)); }
+    return lines.join('\n');
+  }
+  async function shareText(text, msg) {
+    try { await navigator.clipboard.writeText(text); toast(msg); }
+    catch { prompt('Скопируйте:', text); }
+  }
+  $('copy').onclick = () => shareText(summary(), 'Итог скопирован — отправьте его в чат');
+  $('link').onclick = () => {
+    const data = btoa(unescape(encodeURIComponent(JSON.stringify(S)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    shareText(`${location.origin}${location.pathname}#d=${data}`, 'Ссылка скопирована: по ней откроется этот же расчёт');
+  };
+  let tt; function toast(t) { $('toast').textContent = t; $('toast').classList.add('show'); clearTimeout(tt); tt = setTimeout(() => $('toast').classList.remove('show'), 2200); }
+
+  if (!S.people.length && !S.expenses.length) {
+    // пример, чтобы было видно, как это работает
+    const ids = ['a', 'b', 'c', 'd'];
+    S = { name: 'Выходные в Казани', people: ['Аня', 'Миша', 'Катя', 'Олег'].map((n, i) => ({ id: ids[i], name: n, color: COLORS[i] })),
+      expenses: [
+        { id: 'e1', title: 'Квартира на 2 ночи', sum: 9600, payer: 'a', mode: 'equal', parts: { a: 1, b: 1, c: 1, d: 1 } },
+        { id: 'e2', title: 'Ужин в ресторане', sum: 5400, payer: 'b', mode: 'exact', parts: { a: 1200, b: 1500, c: 1100, d: 1600 } },
+        { id: 'e3', title: 'Такси из аэропорта', sum: 1200, payer: 'd', mode: 'equal', parts: { a: 1, b: 1, c: 1, d: 1 } },
+        { id: 'e4', title: 'Билеты в музей', sum: 1500, payer: 'c', mode: 'equal', parts: { a: 1, c: 1, d: 1 } },
+      ] };
+  }
+  render();
+  if (shared) toast('Открыт расчёт по ссылке');
+})();
+</script>
+</body>
+</html>
